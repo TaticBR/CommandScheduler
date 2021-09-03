@@ -69,7 +69,7 @@ export class Logger {
     private static printMessages(message, logLevel = 'log') {
         const color = this.getColorByLogLevel(logLevel);
         const formattedLogLevel = `[${logLevel.toUpperCase()}]`.padStart(7, ' ');
-        console.log(color(`[CommandScheduler] ${process.pid} - ${this.getTimestamp()} ${formattedLogLevel} ${message}`));
+        console.log(color(`[CmdS] ${process.pid}  - ${this.getTimestamp()} ${formattedLogLevel} ${message}`));
 
     }
 }
