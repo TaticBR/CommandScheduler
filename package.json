@@ -1,5 +1,5 @@
 {
-  "name": "command-scheduler",
+  "name": "@taticbr/commandscheduler",
   "version": "0.0.1",
   "main": "index.js",
   "license": "MIT",
@@ -35,6 +35,9 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
+  },
+  "repository": {
+    "url": "git://github.com/TaticBR/CommandScheduler.git"
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
