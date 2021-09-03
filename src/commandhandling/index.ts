@@ -1,2 +1,2 @@
-export {Command} from './Command';
-export {CommandBus} from './CommandBus';
+export * from './Command';
+export * from './CommandBus';
