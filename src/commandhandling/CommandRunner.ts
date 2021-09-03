@@ -40,6 +40,7 @@ export class CommandRunner {
                 scheduledJob.save();
                 this.dispatchEvent(job, 'onError', err);
             } else {
+                Logger.error(`Job ${jobName} with args ${JSON.stringify(commandOpts.args)} failed with error ${JSON.stringify(err.message)}. And there is no attempts left`)
                 this.dispatchEvent(job, 'onFailed', err);
             }
         })
