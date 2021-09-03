@@ -2,20 +2,18 @@
   "compilerOptions": {
     "module": "commonjs",
     "declaration": true,
+    "lib": ["es2017", "es7", "es6", "dom"],
     "removeComments": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
-    "target": "es2017",
+    "target": "es5",
     "sourceMap": true,
     "outDir": "./dist",
-    "baseUrl": "./src",
-    "incremental": true,
-    "paths": {
-      "elastic-apm-node": [
-        "./node_modules/elastic-apm-nest/types/elastic-apm-node/index.d.ts"
-      ]
-    },
-    "skipLibCheck": true
-  }
+    "incremental": true
+  },
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }

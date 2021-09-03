@@ -2,7 +2,7 @@ import {CommandOpts} from "./CommandOpts";
 import {CommandRunner} from "./CommandRunner";
 import {CommandBus} from "./CommandBus";
 
-const manageCommandBus = (commandName: string, originalCommand, opts: CommandOpts) => {
+const manageCommandBus = (commandName: string, originalCommand: any, opts: CommandOpts) => {
     let commandBus = CommandBus.getInstance();
     commandBus.subscribe(commandName, async (args) => {
         const agenda = await CommandRunner.getInstance();
