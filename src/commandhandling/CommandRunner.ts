@@ -34,13 +34,13 @@ export class CommandRunner {
             const jobName = job.attrs.name;
             const commandOpts: CommandRunnerOpts = job.attrs.data;
             if (commandOpts.retryCount > 0) {
-                Logger.warn(`Job ${jobName} with args ${JSON.stringify(commandOpts.args)} failed with error ${JSON.stringify(err.message)}. Retrying in ${commandOpts.retryDelaySeconds} seconds. Attempts left ${commandOpts.retryCount}`)
+                Logger.warn(`Job ${jobName} with args ${JSON.stringify(commandOpts.args)} failed with error ${JSON.stringify(err.message)}. Retrying in ${commandOpts.retryDelaySeconds} seconds. Attempts left ${commandOpts.retryCount}.`)
                 commandOpts.retryCount--;
                 let scheduledJob = await job.schedule(`${commandOpts.retryDelaySeconds} seconds`);
                 scheduledJob.save();
                 this.dispatchEvent(job, 'onError', err);
             } else {
-                Logger.error(`Job ${jobName} with args ${JSON.stringify(commandOpts.args)} failed with error ${JSON.stringify(err.message)}. And there is no attempts left`)
+                Logger.error(`Job ${jobName} with args ${JSON.stringify(commandOpts.args)} failed with error ${JSON.stringify(err.message)}. And there is no attempts left.`)
                 this.dispatchEvent(job, 'onFailed', err);
             }
         })
