@@ -22,9 +22,9 @@ export const Command = (commandName: string, opts: CommandOpts = new CommandOpts
 
     descriptor.value = new Proxy(originalCommand, {
         apply: async function (target, thisArg, args) {
-            const agenda = await CommandRunner.getInstance();
+            const commandRunner = CommandRunner.getInstance();
 
-            return await agenda.exec(commandName, originalCommand, thisArg, args, opts);
+            return await commandRunner.exec(commandName, originalCommand, thisArg, args, opts);
         },
     });
 };

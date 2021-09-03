@@ -28,7 +28,6 @@ export class CommandRunner {
     async initAgenda() {
         await this.agenda.start();
         this.agenda.on('success', (job) => {
-            const jobName = job.attrs.name;
             this.dispatchEvent(job, 'onSuccess');
         })
         this.agenda.on('fail', async (err, job) => {
@@ -75,12 +74,12 @@ export class CommandRunner {
         const boundedCommand = command.bind(thisArg, ...args);
         try {
             const result = await boundedCommand();
-            opts.onSuccess && opts.onSuccess(commandName);
+            opts.onSuccess?.(commandName);
             return result;
         } catch (e) {
             const retryOnException = opts.retryOnExceptions?.find((retryOnException) => e instanceof retryOnException);
             if (retryOnException) {
-                opts.onError && opts.onError(commandName, e);
+                opts.onError?.(commandName, e);
                 await this.agenda.define(commandName, boundedCommand);
                 let job = await this.agenda.create(commandName, {...opts, thisArg, args});
                 await job.save();
