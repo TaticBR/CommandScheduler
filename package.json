@@ -1,7 +1,7 @@
 {
   "name": "@taticbr/commandscheduler",
-  "version": "0.0.3",
-  "main": "index.js",
+  "version": "0.0.4",
+  "main": "src/index.ts",
   "license": "MIT",
   "scripts": {
     "build": "tsc --build",
@@ -19,7 +19,6 @@
     "ts-jest": "^27.0.1",
     "typescript": "^4.4.2"
   },
-  "main": "src/index.ts",
   "jest": {
     "moduleFileExtensions": [
       "js",
