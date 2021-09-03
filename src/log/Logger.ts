@@ -5,7 +5,7 @@ export class Logger {
      * Write an 'error' level log.
      */
     static error(message: any, stack?: string): void {
-        this.printMessages(`${message}\n${JSON.stringify(stack)}`, 'verbose');
+        this.printMessages(`${message}\n${JSON.stringify(stack)}`, 'error');
     }
 
     /**
