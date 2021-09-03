@@ -3,14 +3,15 @@ import {CommandRunner} from "./CommandRunner";
 import {CommandBus} from "./CommandBus";
 
 const manageCommandBus = (commandName: string, originalCommand: any, opts: CommandOpts) => {
-    let commandBus = CommandBus.getInstance();
+    const commandBus = CommandBus.getInstance();
+    const commandRunner = CommandRunner.getInstance();
     commandBus.subscribe(commandName, async (args) => {
-        const agenda = await CommandRunner.getInstance();
+        const agenda = await commandRunner;
         return await agenda.exec(commandName, originalCommand, {}, args, opts);
     });
-    commandBus.subscribe(`onSuccess${commandBus}`, opts.onSuccess);
-    commandBus.subscribe(`onFailed${commandBus}`, opts.onFailed);
-    commandBus.subscribe(`onError${commandBus}`, opts.onError);
+
+    const job = {attrs: {_id: commandName}};
+    commandRunner.mapSubscription(opts, job);
 }
 
 export const Command = (commandName: string, opts: CommandOpts = new CommandOpts()) => (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {

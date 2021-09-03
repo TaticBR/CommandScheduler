@@ -10,8 +10,12 @@
     "target": "es5",
     "sourceMap": true,
     "outDir": "./dist",
+    "baseUrl": "./src",
     "incremental": true
   },
+  "include": [
+    "src"
+  ],
   "exclude": [
     "node_modules",
     "dist"

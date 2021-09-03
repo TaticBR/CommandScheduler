@@ -75,12 +75,12 @@ export class CommandRunner {
         const boundedCommand = command.bind(thisArg, ...args);
         try {
             const result = await boundedCommand();
-            opts.onSuccess(commandName);
+            opts.onSuccess && opts.onSuccess(commandName);
             return result;
         } catch (e) {
             const retryOnException = opts.retryOnExceptions?.find((retryOnException) => e instanceof retryOnException);
             if (retryOnException) {
-                opts.onError(commandName, e);
+                opts.onError && opts.onError(commandName, e);
                 await this.agenda.define(commandName, boundedCommand);
                 let job = await this.agenda.create(commandName, {...opts, thisArg, args});
                 await job.save();
@@ -105,7 +105,7 @@ export class CommandRunner {
         this.commandBus.subscribe(`${eventType}${job?.attrs?._id}`, callback);
     }
 
-    private mapSubscription(opts: CommandOpts, job: any) {
+    public mapSubscription(opts: CommandOpts, job?: any) {
         if (opts.onSuccess) {
             this.subscribeEvent(job, 'onSuccess', opts.onSuccess);
         }
