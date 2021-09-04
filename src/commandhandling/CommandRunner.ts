@@ -4,17 +4,14 @@ import {CommandRunnerOpts} from "./CommandRunnerOpts";
 import {CommandBus} from "./CommandBus";
 import {Logger} from "../log/Logger";
 
-const mongoConnectionString = process.env.MONGO_URL || 'mongodb://127.0.0.1/agenda';
-
 export class CommandRunner {
-    private readonly agenda: Agenda;
+    private agenda: Agenda;
     private static singleton: CommandRunner;
+    private preCommands = [];
     private readonly commandBus: CommandBus;
+    private started = false;
 
     constructor() {
-        this.agenda = new Agenda({
-            db: {address: mongoConnectionString},
-        });
         this.commandBus = CommandBus.getInstance();
 
         const graceful = async () => {
@@ -25,30 +22,41 @@ export class CommandRunner {
         process.on("SIGINT", graceful);
     }
 
-    async initAgenda() {
-        await this.agenda.start();
-        this.agenda.on('success', (job) => {
-            this.dispatchEvent(job, 'onSuccess');
-        })
-        this.agenda.on('fail', async (err, job) => {
-            const jobName = job.attrs.name;
-            const commandOpts: CommandRunnerOpts = job.attrs.data;
-            if (commandOpts.retryCount > 0) {
-                Logger.warn(`Job ${jobName} with args ${JSON.stringify(commandOpts.args)} failed with error ${JSON.stringify(err.message)}. Retrying in ${commandOpts.retryDelaySeconds} seconds. Attempts left ${commandOpts.retryCount}.`)
-                commandOpts.retryCount--;
-                let scheduledJob = await job.schedule(`${commandOpts.retryDelaySeconds} seconds`);
-                scheduledJob.save();
-                this.dispatchEvent(job, 'onError', err);
-            } else {
-                Logger.error(`Job ${jobName} with args ${JSON.stringify(commandOpts.args)} failed with error ${JSON.stringify(err.message)}. And there is no attempts left.`)
-                this.dispatchEvent(job, 'onFailed', err);
+    async start(mongoConnectionString: string) {
+        if (!this.started) {
+            this.agenda = new Agenda({
+                db: {address: mongoConnectionString},
+            });
+            await this.agenda.start();
+            this.agenda.on('success', (job) => {
+                this.dispatchEvent(job, 'onSuccess');
+            })
+            this.agenda.on('fail', async (err, job) => {
+                const jobName = job.attrs.name;
+                const commandOpts: CommandRunnerOpts = job.attrs.data;
+                if (commandOpts.retryCount > 0) {
+                    Logger.warn(`Job ${jobName} with args ${JSON.stringify(commandOpts.args)} failed with error ${JSON.stringify(err.message)}. Retrying in ${commandOpts.retryDelaySeconds} seconds. Attempts left ${commandOpts.retryCount}.`)
+                    commandOpts.retryCount--;
+                    let scheduledJob = await job.schedule(`${commandOpts.retryDelaySeconds} seconds`);
+                    scheduledJob.save();
+                    this.dispatchEvent(job, 'onError', err);
+                } else {
+                    Logger.error(`Job ${jobName} with args ${JSON.stringify(commandOpts.args)} failed with error ${JSON.stringify(err.message)}. And there is no attempts left.`)
+                    this.dispatchEvent(job, 'onFailed', err);
+                }
+            })
+            for (const [commandName, command] of this.preCommands) {
+                this.agenda.define(commandName, (job) => command(...job.attrs.data.args));
             }
-        })
-        let jobs = await this.agenda.jobs({nextRunAt: {$exists: true}, 'data.retryCount': {$gt: 0}});
-        for (const job of jobs) {
-            let scheduledJob = await job.schedule(`${job.attrs.data.retryDelaySeconds} seconds`);
-            scheduledJob.attrs.data.restarted = true;
-            scheduledJob.save();
+            let jobs = await this.agenda.jobs({nextRunAt: {$exists: true}, 'data.retryCount': {$gt: 0}});
+            for (const job of jobs) {
+                let scheduledJob = await job.schedule(`${job.attrs.data.retryDelaySeconds} seconds`);
+                scheduledJob.attrs.data.restarted = true;
+                scheduledJob.save();
+            }
+            this.started = true;
+        } else {
+            Logger.log('CommandRunner already stated.')
         }
     }
 
@@ -59,15 +67,16 @@ export class CommandRunner {
         return this.singleton;
     }
 
-    public static pushCommand(commandName: string, command: any) {
-        this.getInstance().agenda.define(commandName, {lockLifetime: 60000}, async (job) => {
-            return await command(...job.attrs.data.args);
-        });
+    public pushCommand(commandName: string, command: any) {
+        if (this.started) {
+            Logger.error('pushCommand can only be called before CommandRunner has started.')
+        }
+        this.preCommands.push([commandName, command]);
     }
 
     async exec(
         commandName: string,
-        command: () => Promise<void>,
+        command: (...p: any) => Promise<void>,
         thisArg: any,
         args: any[],
         opts?: CommandOpts,
@@ -81,7 +90,7 @@ export class CommandRunner {
             const retryOnException = opts.retryOnExceptions?.find((retryOnException) => e instanceof retryOnException);
             if (retryOnException) {
                 opts.onError?.(commandName, e);
-                await this.agenda.define(commandName, boundedCommand);
+                await this.agenda.define(commandName, (job) => command(...job.attrs.data.args));
                 let job = await this.agenda.create(commandName, {...opts, thisArg, args});
                 await job.save();
                 this.mapSubscription(opts, job);

@@ -2,22 +2,22 @@ import {CommandOpts} from "./CommandOpts";
 import {CommandRunner} from "./CommandRunner";
 import {CommandBus} from "./CommandBus";
 
-const manageCommandBus = (commandName: string, originalCommand: any, opts: CommandOpts) => {
-    const commandBus = CommandBus.getInstance();
+const preInitCommands = (commandName: string, originalCommand: any, opts: CommandOpts) => {
     const commandRunner = CommandRunner.getInstance();
+    commandRunner.pushCommand(commandName, originalCommand);
+    const job = {attrs: {_id: commandName}};
+    commandRunner.mapSubscription(opts, job);
+
+    const commandBus = CommandBus.getInstance();
     commandBus.subscribe(commandName, async (args) =>
         commandRunner.exec(commandName, originalCommand, {}, args, opts)
     );
-
-    const job = {attrs: {_id: commandName}};
-    commandRunner.mapSubscription(opts, job);
 }
 
 export const Command = (commandName: string, opts: CommandOpts = new CommandOpts()) => (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
     const originalCommand = descriptor.value;
 
-    CommandRunner.pushCommand(commandName, originalCommand);
-    manageCommandBus(commandName, originalCommand, opts);
+    preInitCommands(commandName, originalCommand, opts);
 
     descriptor.value = new Proxy(originalCommand, {
         apply: async function (target, thisArg, args) {
