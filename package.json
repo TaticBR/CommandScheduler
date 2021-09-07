@@ -41,7 +41,13 @@
   "repository": {
     "url": "git://github.com/TaticBR/CommandScheduler.git"
   },
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
-  }
+  "bugs": {
+    "url": "https://github.com/TaticBR/CommandScheduler/issues"
+  },
+  "homepage": "https://github.com/TaticBR/CommandScheduler#readme",
+  "directories": {
+    "test": "test"
+  },
+  "author": "TaticBR",
+  "description": ""
 }

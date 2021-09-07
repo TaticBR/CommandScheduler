@@ -9,8 +9,8 @@ const preInitCommands = (commandName: string, originalCommand: any, opts: Comman
     commandRunner.mapSubscription(opts, job);
 
     const commandBus = CommandBus.getInstance();
-    commandBus.subscribe(commandName, async (args) =>
-        commandRunner.exec(commandName, originalCommand, {}, args, opts)
+    commandBus.subscribe(commandName, async (thisArg: any, ...args: any[]) =>
+        commandRunner.exec(commandName, originalCommand, thisArg, args, opts)
     );
 }
 

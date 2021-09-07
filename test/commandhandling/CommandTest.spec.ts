@@ -5,6 +5,8 @@ import {Logger} from "../../src/log/Logger";
 
 class CommandTestSpec {
 
+    logger = Logger;
+
     @Command('abc', {
         retryOnExceptions: [Error],
         retryCount: 1,
@@ -15,7 +17,8 @@ class CommandTestSpec {
     })
     async main(x: any) {
         // return x;
-        throw Error(JSON.stringify(x));
+        this.logger.log(x);
+        // throw Error(JSON.stringify(x));
     }
 }
 
@@ -30,7 +33,7 @@ describe('CommandTest', () => {
     }, 20000);
 
     it('Command test', async () => {
-        CommandBus.getInstance().dispatch('abc', {
+        CommandBus.getInstance().dispatch('abc', new CommandTestSpec(), {
             hello: "EventError"
         })
         let resp = await new CommandTestSpec().main({

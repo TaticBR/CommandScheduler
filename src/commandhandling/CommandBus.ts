@@ -16,11 +16,11 @@ export class CommandBus extends EventEmitter {
         return this.singleton;
     }
 
-    dispatch(commandName: string, ...args: any[]) {
-        this.emit(commandName, args);
+    dispatch(commandName: string, thisArg: any, ...args: any[]) {
+        this.emit(commandName, thisArg, args);
     }
 
-    subscribe(commandName: string, handler: (...args: any[]) => void) {
+    subscribe(commandName: string, handler: (thisArg: any, ...args: any[]) => void) {
         this.on(commandName, handler);
     }
 

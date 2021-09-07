@@ -90,7 +90,7 @@ export class CommandRunner {
             const retryOnException = opts.retryOnExceptions?.find((retryOnException) => e instanceof retryOnException);
             if (retryOnException) {
                 opts.onError?.(commandName, e);
-                await this.agenda.define(commandName, (job) => command(...job.attrs.data.args));
+                await this.agenda.define(commandName, (job) => command.bind(thisArg, ...job.attrs.data.args)());
                 let job = await this.agenda.create(commandName, {...opts, thisArg, args});
                 await job.save();
                 this.mapSubscription(opts, job);
