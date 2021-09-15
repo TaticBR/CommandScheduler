@@ -11,14 +11,14 @@ class CommandTestSpec {
         retryOnExceptions: [Error],
         retryCount: 1,
         retryDelaySeconds: 1,
-        onSuccess: () => Logger.log('=)'),
-        onFailed: () => Logger.log('=('),
-        onError: () => Logger.log('=/')
+        onSuccess: (name, args) => Logger.log(name + ' =) ' + JSON.stringify(args)),
+        onFailed: (name, args, err) => Logger.log(name + ' =( ' + JSON.stringify(args) + ' error ' + JSON.stringify(err, Object.getOwnPropertyNames(err))),
+        onError: (name, args, err) => Logger.log(name + ' =/ ' + JSON.stringify(args) + ' error ' + JSON.stringify(err, Object.getOwnPropertyNames(err)))
     })
     async main(x: any) {
         // return x;
-        this.logger.log(x);
-        // throw Error(JSON.stringify(x));
+        // this.logger.log(x);
+        throw Error(JSON.stringify(x));
     }
 }
 

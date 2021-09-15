@@ -29,7 +29,7 @@ export class CommandRunner {
             });
             await this.agenda.start();
             this.agenda.on('success', (job) => {
-                this.dispatchEvent(job, 'onSuccess');
+                this.dispatchEvent(job, 'onSuccess', job.attrs.data.args);
             })
             this.agenda.on('fail', async (err, job) => {
                 const jobName = job.attrs.name;
@@ -39,10 +39,10 @@ export class CommandRunner {
                     commandOpts.retryCount--;
                     let scheduledJob = await job.schedule(`${commandOpts.retryDelaySeconds} seconds`);
                     scheduledJob.save();
-                    this.dispatchEvent(job, 'onError', err);
+                    this.dispatchEvent(job, 'onError', job.attrs.data.args, err);
                 } else {
                     Logger.error(`Job ${jobName} with args ${JSON.stringify(commandOpts.args)} failed with error ${JSON.stringify(err.message)}. And there is no attempts left.`)
-                    this.dispatchEvent(job, 'onFailed', err);
+                    this.dispatchEvent(job, 'onFailed', job.attrs.data.args, err);
                 }
             })
             for (const [commandName, command] of this.preCommands) {
@@ -84,33 +84,33 @@ export class CommandRunner {
         const boundedCommand = command.bind(thisArg, ...args);
         try {
             const result = await boundedCommand();
-            opts.onSuccess?.(commandName);
+            opts.onSuccess?.(commandName, args);
             return result;
         } catch (e) {
             const retryOnException = opts.retryOnExceptions?.find((retryOnException) => e instanceof retryOnException);
             if (retryOnException) {
-                opts.onError?.(commandName, e);
+                opts.onError?.(commandName, args, e);
                 await this.agenda.define(commandName, (job) => command.bind(thisArg, ...job.attrs.data.args)());
                 let job = await this.agenda.create(commandName, {...opts, thisArg, args});
                 await job.save();
                 this.mapSubscription(opts, job);
                 job.schedule(`${opts.retryDelaySeconds} seconds`);
             } else {
-                opts.onFailed(commandName, e);
+                opts.onFailed?.(commandName, args, e);
                 throw e;
             }
         }
     }
 
-    dispatchEvent(job: any, eventType: string, err?: any) {
+    dispatchEvent(job: any, eventType: string, args: any[], err?: any) {
         if (!job.attrs.restarted) {
-            this.commandBus.dispatch(`${eventType}${job.attrs._id}`, job.attrs.name, err);
+            this.commandBus.dispatch(`${eventType}${job.attrs._id}`, job.attrs.name, args, err);
         } else {
-            this.commandBus.dispatch(`${eventType}${job.attrs.name}`, job.attrs.name, err);
+            this.commandBus.dispatch(`${eventType}${job.attrs.name}`, job.attrs.name, args, err);
         }
     }
 
-    subscribeEvent(job: any, eventType: string, callback: (jobName: any, err?: any) => Promise<void> | void) {
+    subscribeEvent(job: any, eventType: string, callback: (jobName: any, args: any[], err?: any) => Promise<void> | void) {
         this.commandBus.subscribe(`${eventType}${job?.attrs?._id}`, callback);
     }
 
