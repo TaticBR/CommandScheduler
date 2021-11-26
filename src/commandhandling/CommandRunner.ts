@@ -1,4 +1,4 @@
-import {Agenda} from 'agenda/es';
+import {Agenda} from 'agenda';
 import {CommandOpts} from "./CommandOpts";
 import {CommandRunnerOpts} from "./CommandRunnerOpts";
 import {CommandBus} from "./CommandBus";
@@ -22,10 +22,10 @@ export class CommandRunner {
         process.on("SIGINT", graceful);
     }
 
-    async start(mongoConnectionString: string) {
+    async start(mongoConnectionString: string, collectionName: string) {
         if (!this.started) {
             this.agenda = new Agenda({
-                db: {address: mongoConnectionString},
+                db: {address: mongoConnectionString, collection: collectionName},
             });
             await this.agenda.start();
             this.agenda.on('success', (job) => {
@@ -52,7 +52,7 @@ export class CommandRunner {
             for (const job of jobs) {
                 let scheduledJob = await job.schedule(`${job.attrs.data.retryDelaySeconds} seconds`);
                 scheduledJob.attrs.data.restarted = true;
-                scheduledJob.save();
+                scheduledJob.run();
             }
             this.started = true;
         } else {
@@ -81,6 +81,9 @@ export class CommandRunner {
         args: any[],
         opts?: CommandOpts,
     ) {
+        if (!this.agenda) {
+            throw Error('Command runner was not started');
+        }
         const boundedCommand = command.bind(thisArg, ...args);
         try {
             const result = await boundedCommand();

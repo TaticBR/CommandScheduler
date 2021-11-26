@@ -29,7 +29,7 @@ function sleep(ms: number) {
 describe('CommandTest', () => {
     beforeAll(async () => {
         let any = CommandRunner.getInstance();
-        await any.start('mongodb://127.0.0.1/agenda');
+        await any.start('mongodb://127.0.0.1/agenda', 'agenda');
     }, 20000);
 
     it('Command test', async () => {
