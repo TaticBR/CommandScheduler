@@ -1,9 +1,7 @@
-import {CommandOpts} from "./CommandOpts";
+import { CommandOpts } from './CommandOpts';
 
 export class CommandRunnerOpts extends CommandOpts {
+  thisArg: any;
 
-    thisArg: any;
-
-    args: any[];
-
+  args: any[];
 }
