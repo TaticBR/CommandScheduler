@@ -29,21 +29,23 @@ export const Command =
       apply: async function (target, thisArg, args) {
         const commandRunner = CommandRunner.getInstance();
 
-        return opts.async
-          ? commandRunner.asyncExec(
-              commandName,
-              originalCommand,
-              thisArg,
-              args,
-              opts,
-            )
-          : commandRunner.exec(
-              commandName,
-              originalCommand,
-              thisArg,
-              args,
-              opts,
-            );
+        if (opts.sync) {
+          return commandRunner.exec(
+            commandName,
+            originalCommand,
+            thisArg,
+            args,
+            opts,
+          );
+        }
+
+        return commandRunner.asyncExec(
+          commandName,
+          originalCommand,
+          thisArg,
+          args,
+          opts,
+        );
       },
     });
   };
