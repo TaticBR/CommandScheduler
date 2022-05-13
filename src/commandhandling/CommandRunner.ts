@@ -121,17 +121,13 @@ export class CommandRunner {
         let count = opts.retryCount;
         while (count > 0) {
           try {
-            Logger.log(`Tentativa número ${count}`);
             const result = await boundedCommand();
             opts.onSuccess?.(commandName, args);
             return result;
           } catch (error) {
             count--;
 
-            opts.onFailed?.(commandName, args, {
-              ...error,
-              errorMessage: 'Eu tentei',
-            });
+            opts.onFailed?.(commandName, args, error);
             if (count === 0) throw error;
           }
         }
