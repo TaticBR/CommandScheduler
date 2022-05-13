@@ -118,10 +118,22 @@ export class CommandRunner {
         (retryOnException) => e instanceof retryOnException,
       );
       if (retryOnException) {
-        let count = opts.retryCount;
+        let count = opts.retryCount || 1;
         while (count > 0) {
           try {
-            const result = await boundedCommand();
+            const command = () => {
+              if (opts.retryDelaySeconds) {
+                return new Promise((res) =>
+                  setTimeout(
+                    () => res(boundedCommand()),
+                    opts.retryDelaySeconds * 1000,
+                  ),
+                );
+              }
+              return new Promise((res) => res(boundedCommand()));
+            };
+
+            const result = await command();
             opts.onSuccess?.(commandName, args);
             return result;
           } catch (error) {
